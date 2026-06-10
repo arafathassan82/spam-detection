@@ -1,0 +1,320 @@
+schema: '2.0'
+stages:
+  generate_data:
+    cmd: python src/data/generate_dataset.py
+    deps:
+    - path: src/data/generate_dataset.py
+      hash: md5
+      md5: 0e96f82b17a66733062597dfa1861ac4
+      size: 9217
+    params:
+      params.yaml:
+        data.n_samples: 10000
+        data.random_seed: 4
+        data.spam_ratio: 0.3
+    outs:
+    - path: data/raw/emails.csv
+      hash: md5
+      md5: 7466743c21e298723f276fce6548f4b3
+      size: 5330040
+  clean_data:
+    cmd: python src/data/clean_data.py
+    deps:
+    - path: data/raw/emails.csv
+      hash: md5
+      md5: 7466743c21e298723f276fce6548f4b3
+      size: 5330040
+    - path: src/data/clean_data.py
+      hash: md5
+      md5: b8ee709690c989f19d2bf8eac5299dab
+      size: 4526
+    - path: src/utils/text_utils.py
+      hash: md5
+      md5: f6efe943d27a9930b1c8224b4de0f22c
+      size: 2900
+    params:
+      params.yaml:
+        cleaning:
+          min_text_length: 10
+          max_text_length: 5000
+          remove_urls: true
+          remove_html: true
+          remove_special_chars: true
+          lowercase: true
+        data.random_seed: 4
+        data.test_size: 0.2
+        data.val_size: 0.1
+    outs:
+    - path: data/interim/test.csv
+      hash: md5
+      md5: abca06357cc9ea9b2599b601062f9ebb
+      size: 1614397
+    - path: data/interim/train.csv
+      hash: md5
+      md5: 3495a839579cf97710026f936ed68924
+      size: 5642632
+    - path: data/interim/val.csv
+      hash: md5
+      md5: 51ce4489b661fdc184e7958ce9da7eb5
+      size: 805285
+    - path: reports/metrics/cleaning_stats.json
+      hash: md5
+      md5: fe51b6e98cf6b7b5642d6d33c3dc39fd
+      size: 269
+  build_features:
+    cmd: python src/features/build_features.py
+    deps:
+    - path: data/interim/test.csv
+      hash: md5
+      md5: abca06357cc9ea9b2599b601062f9ebb
+      size: 1614397
+    - path: data/interim/train.csv
+      hash: md5
+      md5: 3495a839579cf97710026f936ed68924
+      size: 5642632
+    - path: data/interim/val.csv
+      hash: md5
+      md5: 51ce4489b661fdc184e7958ce9da7eb5
+      size: 805285
+    - path: src/features/build_features.py
+      hash: md5
+      md5: d267f31cc1494129a9106267a8f5797c
+      size: 5968
+    - path: src/utils/text_utils.py
+      hash: md5
+      md5: f6efe943d27a9930b1c8224b4de0f22c
+      size: 2900
+    params:
+      params.yaml:
+        features:
+          tfidf:
+            max_features: 5000
+            ngram_range:
+            - 1
+            - 2
+            min_df: 2
+            max_df: 0.95
+            sublinear_tf: true
+          extra_features:
+          - text_length
+          - word_count
+          - exclamation_count
+          - uppercase_ratio
+          - url_count
+          - digit_ratio
+          - special_char_count
+          selection:
+            method: chi2
+            k_best: 3000
+    outs:
+    - path: data/processed/X_test.npy
+      hash: md5
+      md5: 2fb4c6ba72186816cf85303d951d983d
+      size: 47160128
+    - path: data/processed/X_train.npy
+      hash: md5
+      md5: c6e663e1d27b5114332549a7078f7253
+      size: 165024128
+    - path: data/processed/X_val.npy
+      hash: md5
+      md5: dfac72a00356d0f10330b0582e0f4241
+      size: 23592128
+    - path: data/processed/y_test.npy
+      hash: md5
+      md5: 5c67a54c1999d92cc8e268fd54b8b4ac
+      size: 15848
+    - path: data/processed/y_train.npy
+      hash: md5
+      md5: 2ef381151eda0fdd050147d7f029668a
+      size: 55136
+    - path: data/processed/y_val.npy
+      hash: md5
+      md5: 3f34f23ed1ee2edc02df197ea865908d
+      size: 7992
+    - path: models/baseline/feature_selector.pkl
+      hash: md5
+      md5: 5a725b7a9156d2b25d0c9463f250bc30
+      size: 49591
+    - path: models/baseline/tfidf_vectorizer.pkl
+      hash: md5
+      md5: bd6d9d51097d0a0b5af684397e40dbb4
+      size: 120918
+  train_baseline:
+    cmd: python src/models/train_baseline.py
+    deps:
+    - path: data/processed/X_train.npy
+      hash: md5
+      md5: c6e663e1d27b5114332549a7078f7253
+      size: 165024128
+    - path: data/processed/X_val.npy
+      hash: md5
+      md5: dfac72a00356d0f10330b0582e0f4241
+      size: 23592128
+    - path: data/processed/y_train.npy
+      hash: md5
+      md5: 2ef381151eda0fdd050147d7f029668a
+      size: 55136
+    - path: data/processed/y_val.npy
+      hash: md5
+      md5: 3f34f23ed1ee2edc02df197ea865908d
+      size: 7992
+    - path: src/models/evaluate.py
+      hash: md5
+      md5: b125299b6817a8dae6ebf8d4a540bd7b
+      size: 3695
+    - path: src/models/train_baseline.py
+      hash: md5
+      md5: 65e4e975f1e649462a1f0f9af523458c
+      size: 3798
+    params:
+      params.yaml:
+        baseline:
+          model: naive_bayes
+          min_accuracy: 0.9
+        mlflow:
+          experiment_name: spam_detection
+          tracking_uri: mlruns
+    outs:
+    - path: models/baseline/model.pkl
+      hash: md5
+      md5: 9a6ceea2488a27712a9fd3c545c057cd
+      size: 120855
+    - path: reports/metrics/baseline_metrics.json
+      hash: md5
+      md5: a4867c8aed9591dea6e0e878c27e5393
+      size: 156
+  compare_models:
+    cmd: python src/models/compare_models.py
+    deps:
+    - path: data/processed/X_train.npy
+      hash: md5
+      md5: c6e663e1d27b5114332549a7078f7253
+      size: 165024128
+    - path: data/processed/X_val.npy
+      hash: md5
+      md5: dfac72a00356d0f10330b0582e0f4241
+      size: 23592128
+    - path: data/processed/y_train.npy
+      hash: md5
+      md5: 2ef381151eda0fdd050147d7f029668a
+      size: 55136
+    - path: data/processed/y_val.npy
+      hash: md5
+      md5: 3f34f23ed1ee2edc02df197ea865908d
+      size: 7992
+    - path: src/models/compare_models.py
+      hash: md5
+      md5: 52a18e91764d0e59a4cb4aab0ff51c74
+      size: 5011
+    - path: src/models/evaluate.py
+      hash: md5
+      md5: b125299b6817a8dae6ebf8d4a540bd7b
+      size: 3695
+    params:
+      params.yaml:
+        mlflow:
+          experiment_name: spam_detection
+          tracking_uri: mlruns
+        models:
+          naive_bayes:
+            alpha: 1.0
+          logistic_regression:
+            C: 1.0
+            max_iter: 1000
+            solver: lbfgs
+          random_forest:
+            n_estimators: 100
+            max_depth:
+            random_state: 42
+          gradient_boosting:
+            n_estimators: 100
+            learning_rate: 0.1
+            max_depth: 3
+            random_state: 42
+          svm:
+            C: 1.0
+            kernel: linear
+            probability: true
+    outs:
+    - path: reports/figures/model_comparison.png
+      hash: md5
+      md5: 1ed29ea7242cff91b5b2277c6d9ce5f7
+      size: 58134
+    - path: reports/metrics/model_comparison.json
+      hash: md5
+      md5: 10d5bdaa78edff0a54e01c55e568a781
+      size: 897
+  tune_best_model:
+    cmd: python src/models/tune_model.py
+    deps:
+    - path: data/processed/X_test.npy
+      hash: md5
+      md5: 2fb4c6ba72186816cf85303d951d983d
+      size: 47160128
+    - path: data/processed/X_train.npy
+      hash: md5
+      md5: c6e663e1d27b5114332549a7078f7253
+      size: 165024128
+    - path: data/processed/X_val.npy
+      hash: md5
+      md5: dfac72a00356d0f10330b0582e0f4241
+      size: 23592128
+    - path: data/processed/y_test.npy
+      hash: md5
+      md5: 5c67a54c1999d92cc8e268fd54b8b4ac
+      size: 15848
+    - path: data/processed/y_train.npy
+      hash: md5
+      md5: 2ef381151eda0fdd050147d7f029668a
+      size: 55136
+    - path: data/processed/y_val.npy
+      hash: md5
+      md5: 3f34f23ed1ee2edc02df197ea865908d
+      size: 7992
+    - path: reports/metrics/model_comparison.json
+      hash: md5
+      md5: 10d5bdaa78edff0a54e01c55e568a781
+      size: 897
+    - path: src/models/evaluate.py
+      hash: md5
+      md5: b125299b6817a8dae6ebf8d4a540bd7b
+      size: 3695
+    - path: src/models/tune_model.py
+      hash: md5
+      md5: 7bc37316d5d46f0a6248635dbd35301b
+      size: 8699
+    params:
+      params.yaml:
+        mlflow:
+          experiment_name: spam_detection
+          tracking_uri: mlruns
+        tuning:
+          n_iter: 30
+          cv: 5
+          scoring: f1
+          n_jobs: -1
+    outs:
+    - path: models/production/model.pkl
+      hash: md5
+      md5: e263f6d9234410229f981bb93a463442
+      size: 120903
+    - path: models/production/model_metadata.json
+      hash: md5
+      md5: 6cc07619934e05f53d2cd1bfefd02657
+      size: 298
+    - path: reports/figures/confusion_matrix.png
+      hash: md5
+      md5: 5287a4fe1ac9ff8f3f61df74b0cb8b80
+      size: 28731
+    - path: reports/figures/feature_importance.png
+      hash: md5
+      md5: 5b1981f39ad88835803b32c8a064c496
+      size: 50153
+    - path: reports/figures/roc_curve.png
+      hash: md5
+      md5: b978a3c444c1001436c8013921864bc8
+      size: 36580
+    - path: reports/metrics/final_metrics.json
+      hash: md5
+      md5: 313ada205f1b40a87e598addf7c00848
+      size: 220

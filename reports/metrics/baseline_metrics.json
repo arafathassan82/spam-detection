@@ -1,0 +1,10 @@
+{
+  "baseline": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "roc_auc": 1.0
+  },
+  "min_accuracy_gate": 0.9
+}

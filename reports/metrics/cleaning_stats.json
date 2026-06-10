@@ -1,0 +1,10 @@
+{
+  "total_after_cleaning": 9824,
+  "train_size": 6876,
+  "val_size": 983,
+  "test_size": 1965,
+  "train_spam_ratio": 0.3036649214659686,
+  "val_spam_ratio": 0.3031536113936928,
+  "test_spam_ratio": 0.30330788804071246,
+  "avg_text_length": 249.8176913680782
+}

@@ -1,0 +1,118 @@
+stages:
+
+  # ── Stage 1: Generate synthetic dataset ───────────────────────────────────
+  generate_data:
+    cmd: python src/data/generate_dataset.py
+    deps:
+      - src/data/generate_dataset.py
+    params:
+      - data.n_samples
+      - data.spam_ratio
+      - data.random_seed
+    outs:
+      - data/raw/emails.csv
+
+  # ── Stage 2: Clean raw data ────────────────────────────────────────────────
+  clean_data:
+    cmd: python src/data/clean_data.py
+    deps:
+      - src/data/clean_data.py
+      - src/utils/text_utils.py
+      - data/raw/emails.csv
+    params:
+      - cleaning
+      - data.test_size
+      - data.val_size
+      - data.random_seed
+    outs:
+      - data/interim/train.csv
+      - data/interim/val.csv
+      - data/interim/test.csv
+    metrics:
+      - reports/metrics/cleaning_stats.json:
+          cache: false
+
+  # ── Stage 3: Feature engineering ──────────────────────────────────────────
+  build_features:
+    cmd: python src/features/build_features.py
+    deps:
+      - src/features/build_features.py
+      - src/utils/text_utils.py
+      - data/interim/train.csv
+      - data/interim/val.csv
+      - data/interim/test.csv
+    params:
+      - features
+    outs:
+      - data/processed/X_train.npy
+      - data/processed/X_val.npy
+      - data/processed/X_test.npy
+      - data/processed/y_train.npy
+      - data/processed/y_val.npy
+      - data/processed/y_test.npy
+      - models/baseline/tfidf_vectorizer.pkl
+      - models/baseline/feature_selector.pkl
+
+  # ── Stage 4: Train & validate baseline model ──────────────────────────────
+  train_baseline:
+    cmd: python src/models/train_baseline.py
+    deps:
+      - src/models/train_baseline.py
+      - src/models/evaluate.py
+      - data/processed/X_train.npy
+      - data/processed/X_val.npy
+      - data/processed/y_train.npy
+      - data/processed/y_val.npy
+    params:
+      - baseline
+      - mlflow
+    outs:
+      - models/baseline/model.pkl
+    metrics:
+      - reports/metrics/baseline_metrics.json:
+          cache: false
+
+  # ── Stage 5: Compare all models ───────────────────────────────────────────
+  compare_models:
+    cmd: python src/models/compare_models.py
+    deps:
+      - src/models/compare_models.py
+      - src/models/evaluate.py
+      - data/processed/X_train.npy
+      - data/processed/X_val.npy
+      - data/processed/y_train.npy
+      - data/processed/y_val.npy
+    params:
+      - models
+      - mlflow
+    outs:
+      - reports/figures/model_comparison.png
+    metrics:
+      - reports/metrics/model_comparison.json:
+          cache: false
+
+  # ── Stage 6: Hyperparameter tuning of best model ──────────────────────────
+  tune_best_model:
+    cmd: python src/models/tune_model.py
+    deps:
+      - src/models/tune_model.py
+      - src/models/evaluate.py
+      - reports/metrics/model_comparison.json
+      - data/processed/X_train.npy
+      - data/processed/X_val.npy
+      - data/processed/X_test.npy
+      - data/processed/y_train.npy
+      - data/processed/y_val.npy
+      - data/processed/y_test.npy
+    params:
+      - tuning
+      - mlflow
+    outs:
+      - models/production/model.pkl
+      - models/production/model_metadata.json
+      - reports/figures/confusion_matrix.png
+      - reports/figures/roc_curve.png
+      - reports/figures/feature_importance.png
+    metrics:
+      - reports/metrics/final_metrics.json:
+          cache: false

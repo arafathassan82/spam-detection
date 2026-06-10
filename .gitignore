@@ -1,0 +1,18 @@
+# Virtual environment
+spam-detection/
+venv/
+.venv/
+
+# DVC
+.dvc/cache/
+dvc-remote/
+
+# Data
+data/
+
+# Python
+__pycache__/
+*.pyc
+
+# MLflow
+mlruns/

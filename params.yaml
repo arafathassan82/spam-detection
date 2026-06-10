@@ -1,0 +1,74 @@
+data:
+  n_samples: 10000          # total emails to generate
+  spam_ratio: 0.30        # fraction that are spam
+  random_seed: 4
+  test_size: 0.20
+  val_size: 0.10
+  output_dir: data/raw
+ 
+cleaning:
+  min_text_length: 10       # drop messages shorter than this
+  max_text_length: 5000
+  remove_urls: true
+  remove_html: true
+  remove_special_chars: true
+  lowercase: true
+ 
+features:
+  tfidf:
+    max_features: 5000
+    ngram_range: [1, 2]
+    min_df: 2
+    max_df: 0.95
+    sublinear_tf: true
+  extra_features:            # hand-crafted features to add
+    - text_length
+    - word_count
+    - exclamation_count
+    - uppercase_ratio
+    - url_count
+    - digit_ratio
+    - special_char_count
+  selection:
+    method: chi2             # chi2 | mutual_info | anova
+    k_best: 3000
+ 
+baseline:
+  model: naive_bayes         # Minimum accuracy gate: 90%
+  min_accuracy: 0.90
+ 
+models:                      # All models to compare
+  naive_bayes:
+    alpha: 1.0
+  logistic_regression:
+    C: 1.0
+    max_iter: 1000
+    solver: lbfgs
+  random_forest:
+    n_estimators: 100
+    max_depth: null
+    random_state: 42
+  gradient_boosting:
+    n_estimators: 100
+    learning_rate: 0.1
+    max_depth: 3
+    random_state: 42
+  svm:
+    C: 1.0
+    kernel: linear
+    probability: true
+ 
+tuning:
+  n_iter: 30                 # RandomizedSearchCV iterations
+  cv: 5
+  scoring: f1
+  n_jobs: -1
+ 
+mlflow:
+  experiment_name: spam_detection
+  tracking_uri: mlruns
+ 
+api:
+  host: 0.0.0.0
+  port: 8000
+  model_path: models/production
