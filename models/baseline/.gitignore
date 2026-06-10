@@ -1,1 +1,3 @@
 /model.pkl
+/tfidf_vectorizer.pkl
+/feature_selector.pkl
